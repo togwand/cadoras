@@ -95,25 +95,18 @@ EOF
 flake-menu() {
   cat << EOF
 FLAKE MENU
- 1) Format
- 2) Update
- 3) Build NixOS config
- 4) Build ISO
+ 1) Update
+ 2) Build NixOS config
+ 3) Build ISO
 
 EOF
   o1() {
     if is-user
     then
-      run "nix fmt"
-    fi
-  }
-  o2() {
-    if is-user
-    then
       run "nix flake update"
     fi
   }
-  o3() {
+  o2() {
     build-config() {
       read -rei "switch" -p "mode: " mode
       read -rei "." -p "uri: " flake_uri
@@ -125,7 +118,7 @@ EOF
       build-config
     fi
   }
-  o4() {
+  o3() {
     build-iso() {
       read -rei "github:togwand/nixos-config/experimental" -p "uri: " flake_uri
       read -rei "minimal_iso" -p "name: " config_name
@@ -141,13 +134,20 @@ EOF
 git-menu() {
   cat << EOF
 GIT MENU
- 1) Full diff
- 2) Send changes
- 3) Switch branch and merge with current
- 4) Custom args
+ 1) Format
+ 2) Full diff
+ 3) Send changes
+ 4) Switch branch and merge with current
+ 5) Custom args
 
 EOF
   o1() {
+    if is-user
+    then
+      run treefmt
+    fi
+  }
+  o2() {
     full-diff() {
       git add --all
       git diff HEAD|bat
@@ -157,7 +157,7 @@ EOF
       run "full-diff"
     fi
   }
-  o2() {
+  o3() {
     send-changes() {
       git add --all
       git commit
@@ -168,7 +168,7 @@ EOF
       confirm "send-changes"
     fi
   }
-  o3() {
+  o4() {
     switch-merge() {
       local current_branch
       current_branch="$(git branch --show-current)"
@@ -184,7 +184,7 @@ EOF
       confirm "switch-merge"
     fi
   }
-  o4() {
+  o5() {
     read-args "git" ""
   }
 }
@@ -310,9 +310,6 @@ Optimise store
 
 FLAKE MENU
 
-Format
- WIP
-
 Update
  WIP
 
@@ -324,6 +321,9 @@ Build ISO
 
 
 GIT MENU
+
+Format
+ WIP
 
 Full diff
  WIP
