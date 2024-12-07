@@ -42,7 +42,8 @@ confirm() {
 read-cmd() {
   echo -e "\nCOMMAND"
   read -rei "$1" command
-case $2 in confirm) confirm "$command" ;;
+  case $2 in
+    confirm) confirm "$command" ;;
     *) run "$command" ;;
   esac
 }
