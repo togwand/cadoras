@@ -249,7 +249,7 @@ switch-user() {
 }
 
 change-directory() {
-  echo -e "\nDIRECTORIES HERE\n"
+  echo -e "\nDIRECTORIES HERE"
   ls --group-directories-first -a1d -- */ 2> /dev/null
   echo
   read-args "cd" ""
