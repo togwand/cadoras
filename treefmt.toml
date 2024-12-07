@@ -1,0 +1,15 @@
+[formatter.mdsh]
+command = "mdsh"
+excludes = []
+includes = ["README.md"]
+options = ["--inputs"]
+[formatter.nix]
+command = "nixfmt"
+excludes = []
+includes = ["*.nix"]
+options = []
+[formatter.beautysh]
+command = "beautysh"
+excludes = []
+includes = ["*.sh"]
+options = ["-i", "2"]
