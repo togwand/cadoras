@@ -252,7 +252,7 @@ change-directory() {
   echo -e "\nDIRECTORIES HERE\n"
   ls --group-directories-first -a1d -- */ 2> /dev/null
   echo
-  read-args "cd" "."
+  read-args "cd" ""
 }
 
 help() {
