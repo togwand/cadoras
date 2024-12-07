@@ -260,7 +260,6 @@ help() {
 USAGE
  Simply execute the program as any user by its name
  Use the keybinds below to execute an option
- You can pass the menu as an option: system, flake, git, misc (default: flake)
 
 
 TIPS
@@ -352,13 +351,6 @@ stty -echoctl
 trap " " SIGINT
 
 menu="flake"
-case "$1" in
-  system) menu="system" ;;
-  flake) menu="flake" ;;
-  git) menu="git" ;;
-  misc) menu="misc" ;;
-esac
-shift
 
 while true
 do

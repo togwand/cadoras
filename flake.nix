@@ -10,10 +10,6 @@
       system = "x86_64-linux";
     in
     {
-      packages.${system}.default = pkgs.writeShellApplication {
-        name = "cadoras";
-        # runtimeInputs = with pkgs; [];
-        text = builtins.readFile ./cadoras.sh;
-      };
+      default = (import ./default.nix { inherit pkgs; });
     };
 }
