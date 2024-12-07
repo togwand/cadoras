@@ -10,6 +10,6 @@
       system = "x86_64-linux";
     in
     {
-      default = (import ./default.nix { inherit pkgs; });
+      default = (import ./src { inherit pkgs; });
     };
 }

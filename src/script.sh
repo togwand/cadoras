@@ -231,14 +231,14 @@ new-user () {
         echo "Not a valid user!"
         return 1
       else
-        exec sudo -u "$new_user" bash "${BASH_SOURCE[0]}" $menu
+        exec sudo -u "$new_user" bash "${BASH_SOURCE[0]}" "$menu"
       fi
     fi
   done
 }
 
 to-root() {
-  exec sudo bash "${BASH_SOURCE[0]}" $menu
+  exec sudo bash "${BASH_SOURCE[0]}" "$menu"
 }
 
 switch-user() {
@@ -350,7 +350,16 @@ EOF
 stty -echoctl
 trap " " SIGINT
 
-menu="flake"
+if [ -n "$1" ]
+then
+  case $1 in
+    system) menu="system" ;;
+    flake) menu="flake" ;;
+    git) menu="git" ;;
+    misc) menu="misc" ;;
+  esac
+else menu="flake"
+fi
 
 while true
 do
