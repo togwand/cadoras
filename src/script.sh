@@ -336,66 +336,6 @@ KEYBINDS
 
  q, Q
 		Quit the program
-
-
-SYSTEM MENU
-
-Collect garbage
- WIP
-
-Optimise store
- WIP
-
-
-FLAKE MENU
-
-Update
- WIP
-
-Build NixOS config
- WIP
-
-Build ISO
- WIP
-
-
-GIT MENU
-
-Format
- WIP
-
-Full diff
- WIP
-
-Send changes
- WIP
-
-Switch branch and merge with current
- WIP
-
-Custom args
- WIP
-
-
-RCLONE MENU
-
-Clone remote
- WIP
-
-Sync to remote
- WIP
-
-Custom args
- WIP
-
-
-MISC MENU
-
-Custom command
- WIP
-
-Burn iso image
- WIP
 EOF
 }
 
