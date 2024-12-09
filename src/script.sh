@@ -152,7 +152,7 @@ EOF
       local current_branch
       current_branch="$(git branch --show-current)"
       read-args "git add" "--all" confirm
-      read-args "git fetch" "upstream $current_branch" confirm
+      read-args "git fetch" "{upstream} $current_branch" confirm
       read-args "git diff" "@ @{upstream}" confirm
     }
     if is-user
