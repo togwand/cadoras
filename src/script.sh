@@ -114,6 +114,7 @@ EOF
     }
     if is-root
     then
+      echo
       build-config
     fi
   }
@@ -125,6 +126,7 @@ EOF
     }
     if is-root
     then
+      echo
       build-iso
     fi
   }
@@ -177,6 +179,7 @@ EOF
     }
     if is-user
     then
+      echo
       switch-merge
     fi
   }
@@ -197,7 +200,7 @@ RCLONE MENU
 EOF
   o1() {
     clone-remote() {
-      echo -e "REMOTES"
+      echo -e "\nREMOTES"
       rclone listremotes
       read -rep "local root: " local
       read -rep "remote root: " remote
@@ -206,12 +209,13 @@ EOF
     }
     if is-user
     then
+      echo
       clone-remote
     fi
   }
   o2() {
     sync-to-remote() {
-      echo -e "REMOTES"
+      echo -e "\nREMOTES"
       remotes=$(rclone listremotes)
       read -rep "local root: " updated_local
       read -rei "$remotes" -p "remote root: " unsynced_remote
@@ -254,6 +258,7 @@ EOF
     }
     if is-root
     then
+      echo
       burn-iso
     fi
   }
@@ -282,9 +287,8 @@ switch-user () {
 change-directory() {
   if ls --group-directories-first -a1d -- */ > /dev/null 2> /dev/null
   then
-    echo -e "DIRECTORIES HERE"
+    echo -e "\nDIRECTORIES HERE"
     ls --group-directories-first -a1d -- */ 2> /dev/null
-    echo
     read-args "cd" ""
   else
     read-args "cd" ".."
