@@ -149,11 +149,12 @@ EOF
   }
   o2() {
     full-diff() {
-      local current_branch
+      local remote current_branch
+      remote="$(git remote show)"
       current_branch="$(git branch --show-current)"
       read-args "git add" "--all" confirm
-      read-args "git fetch" "{upstream} $current_branch" confirm
-      read-args "git diff" "@ @{upstream}" confirm
+      read-args "git fetch" "$remote $current_branch" confirm
+      read-args "git diff" "$current_branch $remote/$current_branch" confirm
     }
     if is-user
     then
