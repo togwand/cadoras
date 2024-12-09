@@ -150,7 +150,7 @@ EOF
   o2() {
     full-diff() {
       read-args "git add" "--all" confirm
-      read-args "git diff HEAD" "| less" confirm
+      read-args "git diff" "HEAD" confirm
     }
     if is-user
     then
