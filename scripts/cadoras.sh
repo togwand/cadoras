@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 any-key() {
   echo -e "$1"
   read -rsn 1 -p "Press any key to continue"
