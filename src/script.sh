@@ -139,7 +139,8 @@ GIT MENU
  2) Full diff
  3) Send changes
  4) Switch branch and merge with current
- 5) Custom args
+ 5) Setup new repo
+ 10) Custom args
 EOF
   o1() {
     if is-user
@@ -184,6 +185,17 @@ EOF
     fi
   }
   o5() {
+    setup-new-repo() {
+      local directory=${PWD##*/}
+      read-args "git init" "" confirm
+      read-args "git remote" "add origin https://github.com/togwand/$directory" confirm
+    }
+    if is-user
+    then
+      setup-new-repo
+    fi
+  }
+  o10() {
     if is-user
     then
       read-args "git" ""
@@ -196,7 +208,7 @@ rclone-menu() {
 RCLONE MENU
  1) Clone remote
  2) Sync to remote
- 3) Custom args
+ 10) Custom args
 EOF
   o1() {
     clone-remote() {
@@ -227,7 +239,7 @@ EOF
       sync-to-remote
     fi
   }
-  o3() {
+  o10() {
     if is-user
     then
       read-args "rclone" ""
@@ -238,13 +250,10 @@ EOF
 misc-menu() {
   cat << EOF
 MISC MENU
- 1) Custom command
- 2) Burn iso image
+ 1) Burn iso image
+ 10) Custom command
 EOF
   o1() {
-    read-cmd ""
-  }
-  o2() {
     burn-iso() {
       burn() {
         wipefs -a /dev/"$burnt"
@@ -261,6 +270,9 @@ EOF
       echo
       burn-iso
     fi
+  }
+  o10() {
+    read-cmd ""
   }
 }
 
