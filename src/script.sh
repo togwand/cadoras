@@ -416,7 +416,7 @@ do
     7) o7 ;;
     8) o8 ;;
     9) o9 ;;
-    10) o10 ;;
+    0) o10 ;;
     s|S) menu="system" ;;
     f|F) menu="flake" ;;
     g|G) menu="git" ;;
