@@ -80,7 +80,8 @@ EOF
 }
 
 system-menu() {
-  cat << EOF SYSTEM MENU
+  cat << EOF
+SYSTEM MENU
  1) Collect garbage
  2) Optimise store
  3) Rebuild NixOS
