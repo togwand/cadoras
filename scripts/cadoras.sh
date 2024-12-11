@@ -80,16 +80,29 @@ EOF
 }
 
 system-menu() {
-  cat << EOF
-SYSTEM MENU
+  cat << EOF SYSTEM MENU
  1) Collect garbage
  2) Optimise store
+ 3) Rebuild NixOS
 EOF
   o1() {
     read-args "nix-collect-garbage" "-d" confirm
   }
   o2() {
-    read-args "nix store optimise" "" confirm
+    read-cmd "nix store optimise" confirm
+  }
+  o3() {
+    rebuild-nixos() {
+      read -rei "switch" -p "mode: " mode
+      read -rei "." -p "uri: " flake_uri
+      read -rei "$HOSTNAME" -p "name: " name
+      read-args "nixos-rebuild" "$mode --flake $flake_uri#$name" confirm
+    }
+    if is-root
+    then
+      echo
+      rebuild-nixos
+    fi
   }
 }
 
@@ -97,35 +110,34 @@ flake-menu() {
   cat << EOF
 FLAKE MENU
  1) Update
- 2) Build NixOS config
+ 2) Build output
  3) Build ISO
 EOF
   o1() {
     if is-user
     then
-      read-args "nix flake update" "" confirm
+      read-cmd "nix flake update" confirm
     fi
   }
   o2() {
-    build-config() {
-      read -rei "switch" -p "mode: " mode
+    build-output() {
       read -rei "." -p "uri: " flake_uri
-      read -rei "$HOSTNAME" -p "name: " name
-      read-args "nixos-rebuild $mode --flake $flake_uri#$name" "" confirm
+      read -rei "^*" -p "output: " output
+      read-args "nix build" "$flake_uri#$output" confirm
     }
-    if is-root
+    if is-user
     then
       echo
-      build-config
+      build-output
     fi
   }
   o3() {
     build-iso() {
-      read -rei "github:togwand/nixos-config/experimental" -p "uri: " flake_uri
-      read -rei "minimal_iso" -p "name: " name
-      read-args "nix build $flake_uri#nixosConfigurations.$name.config.system.build.isoImage" "" confirm
+      read -rei "github:togwand/nixos/experimental" -p "uri: " flake_uri
+      read -rei "lanky" -p "name: " name
+      read-args "nix build" "$flake_uri#nixosConfigurations.$name.config.system.build.isoImage" confirm
     }
-    if is-root
+    if is-user
     then
       echo
       build-iso
@@ -174,10 +186,11 @@ EOF
     switch-merge() {
       local current_branch
       current_branch="$(git branch --show-current)"
-      echo "[BRANCHES]"
+      echo "BRANCHES"
       git branch
       read -rei "base" -p "switch to: " next_branch
-      read-args "git switch $next_branch" "&& git merge $current_branch" confirm
+      read-args "git switch" "$next_branch" confirm
+      read-args "git merge" "$current_branch" confirm
     }
     if is-user
     then
@@ -199,7 +212,7 @@ EOF
   o10() {
     if is-user
     then
-      read-args "git" ""
+      read-args "git" "" confirm
     fi
   }
 }
@@ -243,7 +256,7 @@ EOF
   o10() {
     if is-user
     then
-      read-args "rclone" ""
+      read-args "rclone" "" confirm
     fi
   }
 }
@@ -273,7 +286,7 @@ EOF
     fi
   }
   o10() {
-    read-cmd ""
+    read-cmd "" confirm
   }
 }
 
