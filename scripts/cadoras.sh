@@ -3,13 +3,14 @@
 any-key() {
   echo -e "$1"
   read -rsn 1 -p "Press any key to continue"
-  echo
+  echo "
+  "
 }
 
 is-root() {
   if [ "$USER" != "root" ]
   then
-    any-key "\nRoot user is required..."
+    any-key "Root user is required..."
     return 1
   fi
 }
@@ -17,7 +18,7 @@ is-root() {
 is-user() {
   if [ "$USER" = "root" ]
   then
-    any-key "\nNormal user is required..."
+    any-key "Normal user is required..."
     return 1
   fi
 }
@@ -41,51 +42,98 @@ confirm() {
 }
 
 read-cmd() {
-  echo -e "\nCOMMAND"
+  echo "COMMAND"
   read -rei "$1" command
   case $2 in
     confirm) confirm "$command" ;;
-    *) run "$command" ;;
+    *)
+      echo
+      run "$command" ;;
   esac
 }
 
 read-args() {
-  echo -e "\nCOMMAND\t\t\tARGUMENTS"
+  echo "COMMAND ARGUMENTS"
   read -rep "$1 " -i "$2" arguments
   if [ "${arguments}" = "" ]
   then
     case $3 in
       confirm) confirm "$@" ;;
-      *) run "$@" ;;
+      *)
+        echo
+        run "$@" ;;
     esac
   else
     local full="$1 $arguments"
     case $3 in
       confirm) confirm "$full" ;;
-      *) run "$full" ;;
+      *)
+        echo
+        run "$full" ;;
     esac
   fi
 }
 
 header() {
-  cat << EOF
-CADORAS
+  echo "CADORAS
  Press 'h' for help
 
 STATUS
  User: $USER
  Location: $PWD
+  "
+}
 
-EOF
+help() {
+  echo "USAGE
+ Simply execute the program as any user by its name
+ Use the keybinds below to execute an option
+
+TIPS
+ If asked for confirmation, press Enter (all other keys abort execution)
+ You can abort some ongoing commands with CTRL+C
+
+KEYBINDS
+ h: Read about the program usage in an optional pager screen
+ u: Restarts the program with a different user
+ q: Quit the program
+ s, d, f, r, m: Changes the active menu to the (expanded) letter menu (e.g. m = misc, f = flake)
+ digits: Execute the currently displayed menu option by its number (0 equals 10)
+  "
+}
+
+switch-user () {
+  restart() {
+    case $USER in
+      root) exec sudo -u "$new_user" bash "${BASH_SOURCE[0]}" "$menu" ;;
+      *) exec sudo bash "${BASH_SOURCE[0]}" "$menu"
+    esac
+  }
+  case $USER in
+    root)
+      users=$(passwd -Sa|grep P|grep -Eo '^[^ ]+'|grep -v root)
+      echo "USERS
+$users
+      "
+      read -rep "New user: " new_user
+      case $new_user in
+        "$users") run restart ;;
+        *) any-key "\nNot a valid user..." && return 1
+      esac ;;
+    *) run restart ;;
+  esac
+}
+
+quit() {
+  clear && exit
 }
 
 system-menu() {
-  cat << EOF
-SYSTEM MENU
+  echo "SYSTEM MENU
  1) Collect garbage
  2) Optimise store
  3) Rebuild NixOS
-EOF
+  "
   o1() {
     read-args "nix-collect-garbage" "-d" confirm
   }
@@ -97,69 +145,28 @@ EOF
       read -rei "switch" -p "mode: " mode
       read -rei "." -p "uri: " flake_uri
       read -rei "$HOSTNAME" -p "name: " name
+      echo
       read-args "nixos-rebuild" "$mode --flake $flake_uri#$name" confirm
     }
     if is-root
     then
-      echo
       rebuild-nixos
     fi
   }
 }
 
-flake-menu() {
-  cat << EOF
-FLAKE MENU
- 1) Update
- 2) Build output
- 3) Build ISO
-EOF
-  o1() {
-    if is-user
-    then
-      read-cmd "nix flake update" confirm
-    fi
-  }
-  o2() {
-    build-output() {
-      read -rei "." -p "uri: " flake_uri
-      read -rei "^*" -p "output: " output
-      read-args "nix build" "$flake_uri#$output" confirm
-    }
-    if is-user
-    then
-      echo
-      build-output
-    fi
-  }
-  o3() {
-    build-iso() {
-      read -rei "github:togwand/nixos/experimental" -p "uri: " flake_uri
-      read -rei "lanky" -p "name: " name
-      read-args "nix build" "$flake_uri#nixosConfigurations.$name.config.system.build.isoImage" confirm
-    }
-    if is-user
-    then
-      echo
-      build-iso
-    fi
-  }
-}
-
-git-menu() {
-  cat << EOF
-GIT MENU
- 1) Format
+dev-menu() {
+  echo "DEV MENU
+ 1) Treefmt
  2) Full diff
  3) Send changes
  4) Switch branch and merge with current
  5) Setup new repo
- 10) Custom args
-EOF
+  "
   o1() {
     if is-user
     then
-      read-args "treefmt" "" confirm
+      read-args "treefmt" ""
     fi
   }
   o2() {
@@ -190,12 +197,12 @@ EOF
       echo "BRANCHES"
       git branch
       read -rei "base" -p "switch to: " next_branch
+      echo
       read-args "git switch" "$next_branch" confirm
       read-args "git merge" "$current_branch" confirm
     }
     if is-user
     then
-      echo
       switch-merge
     fi
   }
@@ -210,64 +217,91 @@ EOF
       setup-new-repo
     fi
   }
-  o10() {
+}
+
+flake-menu() {
+  echo "FLAKE MENU
+ 1) Update
+ 2) Build output
+ 3) Build ISO
+  "
+  o1() {
     if is-user
     then
-      read-args "git" "" confirm
+      read-cmd "nix flake update" confirm
+    fi
+  }
+  o2() {
+    build-output() {
+      read -rei "." -p "uri: " flake_uri
+      read -rei "^*" -p "output: " output
+      echo
+      read-args "nix build" "$flake_uri#$output" confirm
+    }
+    if is-user
+    then
+      build-output
+    fi
+  }
+  o3() {
+    build-iso() {
+      read -rei "github:togwand/nixos/experimental" -p "uri: " flake_uri
+      read -rei "lanky" -p "name: " name
+      echo
+      read-args "nix build" "$flake_uri#nixosConfigurations.$name.config.system.build.isoImage" confirm
+    }
+    if is-user
+    then
+      build-iso
     fi
   }
 }
 
 rclone-menu() {
-  cat << EOF
-RCLONE MENU
+  echo "RCLONE MENU
  1) Clone remote
  2) Sync to remote
- 10) Custom args
-EOF
+  "
   o1() {
     clone-remote() {
-      echo -e "\nREMOTES"
+      echo "REMOTES"
       rclone listremotes
-      read -rep "local root: " local
-      read -rep "remote root: " remote
+      remotes=$(rclone listremotes)
+      echo
       read -rei "collection" -p "shared directory: " dir
-      read-args "rclone copy" "$remote$dir $local$dir" confirm
+      read -rep "local root: " local
+      read -rei "$remotes" -p "remote root: " remote
+      echo
+      read-args "rclone copy" "$remote$dir $local$dir -vi" confirm
     }
     if is-user
     then
-      echo
       clone-remote
     fi
   }
   o2() {
     sync-to-remote() {
-      echo -e "\nREMOTES"
+      echo "REMOTES"
+      rclone listremotes
       remotes=$(rclone listremotes)
-      read -rep "local root: " updated_local
-      read -rei "$remotes" -p "remote root: " unsynced_remote
+      echo
       read -rei "collection" -p "shared directory: " dir
-      read-args "rclone sync" "$updated_local$dir $unsynced_remote$dir" confirm
+      read -rep "local root: " local
+      read -rei "$remotes" -p "remote root: " remote
+      echo
+      read-args "rclone sync" "$local$dir $remote$dir -vi" confirm
     }
     if is-user
     then
       sync-to-remote
     fi
   }
-  o10() {
-    if is-user
-    then
-      read-args "rclone" "" confirm
-    fi
-  }
 }
 
 misc-menu() {
-  cat << EOF
-MISC MENU
+  echo "MISC MENU
  1) Burn iso image
- 10) Custom command
-EOF
+  "
   o1() {
     burn-iso() {
       burn() {
@@ -282,96 +316,9 @@ EOF
     }
     if is-root
     then
-      echo
       burn-iso
     fi
   }
-  o10() {
-    read-cmd "" confirm
-  }
-}
-
-switch-user () {
-  restart() {
-    case $USER in
-      root) exec sudo -u "$new_user" bash "${BASH_SOURCE[0]}" "$menu" ;;
-      *) exec sudo bash "${BASH_SOURCE[0]}" "$menu"
-    esac
-  }
-  case $USER in
-    root)
-      users=$(passwd -Sa|grep P|grep -Eo '^[^ ]+'|grep -v root)
-      echo -e "\nUSERS\n$users\n"
-      read -rep "New user: " new_user
-      case $new_user in
-        "$users") confirm restart ;;
-        *) any-key "\nNot a valid user..." && return 1
-      esac ;;
-    *) confirm restart ;;
-  esac
-}
-
-change-directory() {
-  if ls --group-directories-first -a1d -- */ > /dev/null 2> /dev/null
-  then
-    echo -e "\nDIRECTORIES HERE"
-    ls --group-directories-first -a1d -- */ 2> /dev/null
-    read-args "cd" ""
-  else
-    read-args "cd" ".."
-  fi
-}
-
-help() {
-  cat << EOF
-USAGE
- Simply execute the program as any user by its name
- Use the keybinds below to execute an option
-
-
-TIPS
- If asked for confirmation, press Enter (all other keys abort execution)
- You can abort some ongoing commands with CTRL+C
- When changing directories you can autocomplete with TAB
-
-
-KEYBINDS
- digits
- 		Execute the currently displayed menu option by its number (0 equals 10)
-
- s, S
- 		Changes the active menu to the system menu
-
- f, F
- 		Changes the active menu to the flake menu
-
- g, G
- 		Changes the active menu to the git menu
-
- r, R
- 		Changes the active menu to the rclone menu
-
- m, M
- 		Changes the active menu to the misc menu, which contains ungrouped commands
-
- c, C
- 		Change the program directory
-
- h, H
- 		Read about the program usage in an optional pager screen
-
- u, U
-		Restarts the program with a different user
- 		root -> select a user from a list
-		other -> change to root
-
- q, Q
-		Quit the program
-EOF
-}
-
-quit() {
-  clear && exit
 }
 
 stty -echoctl
@@ -381,12 +328,12 @@ if [ -n "$1" ]
 then
   case $1 in
     system) menu="system" ;;
+    dev) menu="dev" ;;
     flake) menu="flake" ;;
-    git) menu="git" ;;
     rclone) menu="rclone" ;;
     misc) menu="misc" ;;
   esac
-else menu="flake"
+else menu="system"
 fi
 
 while true
@@ -415,13 +362,21 @@ do
   header
   case $menu in
     system) system-menu ;;
+    dev) dev-menu ;;
     flake) flake-menu ;;
-    git) git-menu ;;
     rclone) rclone-menu ;;
     misc) misc-menu ;;
   esac
   read -rsn 1 key
   case $key in
+    h|H) help|less ;;
+    u|U) switch-user ;;
+    q|Q) quit ;;
+    s|S) menu="system" ;;
+    d|D) menu="dev" ;;
+    f|F) menu="flake" ;;
+    r|R) menu="rclone" ;;
+    m|M) menu="misc" ;;
     1) o1 ;;
     2) o2 ;;
     3) o3 ;;
@@ -432,14 +387,5 @@ do
     8) o8 ;;
     9) o9 ;;
     0) o10 ;;
-    s|S) menu="system" ;;
-    f|F) menu="flake" ;;
-    g|G) menu="git" ;;
-    r|R) menu="rclone" ;;
-    m|M) menu="misc" ;;
-    c|C) change-directory ;;
-    h|H) read-args "help" "| less" confirm ;;
-    u|U) switch-user ;;
-    q|Q) confirm quit ;;
   esac
 done
