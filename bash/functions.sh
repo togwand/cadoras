@@ -77,4 +77,3 @@ read-args() {
 quit() {
   clear && exit
 }
-

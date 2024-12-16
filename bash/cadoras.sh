@@ -1,8 +1,3 @@
-#!/usr/bin/env bash
-DIR="${BASH_SOURCE%/*}"
-if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
-. "$DIR/shared/functions.sh"
-
 header() {
   echo "CADORAS
  Press 'h' for help
