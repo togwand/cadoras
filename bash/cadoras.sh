@@ -46,7 +46,7 @@ system-menu() {
 
 dev-menu() {
   echo -ne "DEV MENU
- 1) Status, stage all, format and local diff
+ 1) Status, format, stage all and local diff
  2) Send changes
  3) Remote diff and pull
  4) Switch branch
@@ -65,6 +65,7 @@ dev-menu() {
       git add -A &> /dev/null
       echo
       treefmt
+      git add -A &> /dev/null
       confirm "git diff --staged"
     fi
   }
