@@ -121,8 +121,7 @@ dev-menu() {
     if is-user
     then
       print-status
-      read-args "git switch" "" confirm
-      run "print-status"
+      read-args "git switch" "" confirm && run "print-status"
     fi
   }
   o4() {
@@ -130,9 +129,7 @@ dev-menu() {
       local current_branch
       current_branch="$(git branch --show-current)"
       print-status
-      read-args "git switch" "$current_branch" confirm
-      confirm "git merge $current_branch"
-      run "print-status"
+      read-args "git switch" "" confirm && confirm "git merge $current_branch" && run "print-status"
       git switch "$current_branch" &> /dev/null
     }
     if is-user
