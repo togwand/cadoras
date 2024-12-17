@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
 any-key() {
-  echo -e "$1"
+  echo -e "\n$1"
   read -rsn 1 -p "Press any key to continue"
-  echo "
-  "
+  echo
 }
 
 is-root() {
@@ -24,11 +23,12 @@ is-user() {
 }
 
 run() {
+  echo
   if ! eval "$1"
   then
-    any-key "\nError..."
+    any-key "Error..."
     return 1
-  else any-key "\nSuccess!"
+  else any-key "Success!"
   fi
 }
 
@@ -36,40 +36,33 @@ confirm() {
   echo -e "\nConfirm $1?"
   read -reN 1 key 2> /dev/null
   case $key in
-    "$(printf '\r')")
-      run "$@"
+    "$(printf '\r')") run "$@" ;;
   esac
 }
 
 read-cmd() {
-  echo "COMMAND"
+  echo -e "\nCOMMAND"
   read -rei "$1" command
   case $2 in
     confirm) confirm "$command" ;;
-    *)
-      echo
-      run "$command" ;;
+    *) run "$command" ;;
   esac
 }
 
 read-args() {
-  echo "COMMAND ARGUMENTS"
+  echo -e "\nCOMMAND ARGUMENTS"
   read -rep "$1 " -i "$2" arguments
   if [ "${arguments}" = "" ]
   then
     case $3 in
       confirm) confirm "$@" ;;
-      *)
-        echo
-        run "$@" ;;
+      *) run "$@" ;;
     esac
   else
     local full="$1 $arguments"
     case $3 in
       confirm) confirm "$full" ;;
-      *)
-        echo
-        run "$full" ;;
+      *) run "$full" ;;
     esac
   fi
 }

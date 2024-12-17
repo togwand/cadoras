@@ -1,3 +1,10 @@
+#!/usr/bin/env bash
+
+if [ -e ./functions.sh ] 2> /dev/null
+then
+  . ./functions.sh 2> /dev/null
+fi
+
 header() {
   echo "GORIS
  Press 'h' for help
@@ -37,10 +44,10 @@ menu() {
   "
   o1() {
     install-nixos() {
-      echo "OPTIONS
+      echo -ne "OPTIONS
  1) Clone a remote git flake repository
  2) Use an existing local or remote flake (flake-uri)
-      "
+      \r"
       read -rsn 1 flake_option
       case $flake_option in
         1)
@@ -54,13 +61,12 @@ menu() {
           cd "$flake_uri" || true
           read-cmd "git switch $branch"
           echo "Edit flake before installing?"
-          read-cmd "ranger" confirm ;;
-        2) read -rei "github:togwand/nixos-config/experimental" -p "flake uri: " flake_uri ;;
-        *) any-key "\nAn option is required..." && return 1
+          read-cmd "lf" confirm ;;
+        2) read -rei "github:togwand/nixos/experimental" -p "flake uri: " flake_uri ;;
+        *) any-key "An option is required..." && return 1
       esac
 
       read -rei "stale" -p "config name to install: " config_name
-      echo
       read-args "disko" "-m disko -f $flake_uri#$config_name" confirm
       read-args "nixos-install" "--root /mnt --flake $flake_uri#$config_name --no-root-password " confirm
       confirm "systemctl reboot"

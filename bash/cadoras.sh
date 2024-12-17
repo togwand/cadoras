@@ -1,3 +1,10 @@
+#!/usr/bin/env bash
+
+if [ -e ./functions.sh ] 2> /dev/null
+then
+  . ./functions.sh 2> /dev/null
+fi
+
 header() {
   echo "CADORAS
  Press 'h' for help
@@ -41,7 +48,7 @@ $users
       read -rep "New user: " new_user
       case $new_user in
         "$users") run restart ;;
-        *) any-key "\nNot a valid user..." && return 1
+        *) any-key "Not a valid user..." && return 1
       esac ;;
     *) run restart ;;
   esac
@@ -52,23 +59,22 @@ quit() {
 }
 
 system-menu() {
-  echo "SYSTEM MENU
+  echo -ne "SYSTEM MENU
  1) Collect garbage
  2) Optimise store
  3) Rebuild NixOS
-  "
+  \r"
   o1() {
     read-args "nix-collect-garbage" "-d" confirm
   }
   o2() {
-    read-cmd "nix store optimise" confirm
+    confirm "nix store optimise"
   }
   o3() {
     rebuild-nixos() {
       read -rei "switch" -p "mode: " mode
       read -rei "." -p "uri: " flake_uri
       read -rei "$HOSTNAME" -p "name: " name
-      echo
       read-args "nixos-rebuild" "$mode --flake $flake_uri#$name" confirm
     }
     if is-root
@@ -79,61 +85,85 @@ system-menu() {
 }
 
 dev-menu() {
-  echo "DEV MENU
- 1) Treefmt
- 2) Full diff
- 3) Send changes
- 4) Switch branch and merge with current
- 5) Setup new repo
-  "
+  stage-format() {
+    git add -A &> /dev/null
+    treefmt
+  }
+  print-status() {
+    echo -e "\nGIT STATUS"
+    git branch
+    git status -s
+  }
+  echo -ne "DEV MENU
+ 1) Stage, format and local diff
+ 2) Send changes
+ 3) Switch branch
+ 4) Merge branch with current
+ 5) Remote diff and pull
+ 6) Setup new repo
+  \r"
   o1() {
     if is-user
     then
-      read-args "treefmt" ""
+      run "stage-format"
+      git diff --staged
     fi
   }
   o2() {
-    full-diff() {
-      read-args "git add" "--all" confirm
-      read-args "git diff" "HEAD" confirm
-    }
-    if is-user
-    then
-      full-diff
-    fi
-  }
-  o3() {
     send-changes() {
-      read-args "git add" "--all" confirm
-      read-args "git commit" "" confirm
-      read-args "git push" "" confirm
+      print-status
+      confirm "git commit"
+      print-status
+      confirm "git push"
+      run "print-status"
     }
     if is-user
     then
       send-changes
     fi
   }
+  o3() {
+    if is-user
+    then
+      print-status
+      read-args "git switch" "" confirm
+      run "print-status"
+    fi
+  }
   o4() {
-    switch-merge() {
+    merge-current() {
       local current_branch
       current_branch="$(git branch --show-current)"
-      echo "BRANCHES"
-      git branch
-      read -rei "base" -p "switch to: " next_branch
-      echo
-      read-args "git switch" "$next_branch" confirm
-      read-args "git merge" "$current_branch" confirm
+      print-status
+      read-args "git switch" "$current_branch" confirm
+      confirm "git merge $current_branch"
+      run "print-status"
+      git switch "$current_branch" &> /dev/null
     }
     if is-user
     then
-      switch-merge
+      merge-current
     fi
   }
   o5() {
+    diff-pull() {
+      local current_branch
+      current_branch="$(git branch --show-current)"
+      git reset &> /dev/null
+      git fetch --all &> /dev/null
+      git diff --staged "origin/$current_branch"
+      confirm "git pull origin $current_branch"
+    }
+    if is-user
+    then
+      diff-pull
+    fi
+  }
+  o6() {
     setup-new-repo() {
-      local directory=${PWD##*/}
-      read-args "git init" "" confirm
-      read-args "git remote" "add origin https://github.com/togwand/$directory" confirm
+      confirm "git init"
+      read-args "git remote add origin" "https://github.com/togwand/${PWD##*/}" confirm
+      run "print-status"
     }
     if is-user
     then
@@ -143,22 +173,21 @@ dev-menu() {
 }
 
 flake-menu() {
-  echo "FLAKE MENU
+  echo -ne "FLAKE MENU
  1) Update
  2) Build output
  3) Build ISO
-  "
+  \r"
   o1() {
     if is-user
     then
-      read-cmd "nix flake update" confirm
+      confirm "nix flake update"
     fi
   }
   o2() {
     build-output() {
       read -rei "." -p "uri: " flake_uri
       read -rei "^*" -p "output: " output
-      echo
       read-args "nix build" "$flake_uri#$output" confirm
     }
     if is-user
@@ -170,7 +199,6 @@ flake-menu() {
     build-iso() {
       read -rei "github:togwand/nixos/experimental" -p "uri: " flake_uri
       read -rei "lanky" -p "name: " name
-      echo
       read-args "nix build" "$flake_uri#nixosConfigurations.$name.config.system.build.isoImage" confirm
     }
     if is-user
@@ -181,61 +209,80 @@ flake-menu() {
 }
 
 rclone-menu() {
-  echo "RCLONE MENU
- 1) Clone remote
- 2) Sync to remote
-  "
+  rclone-inputs() {
+    remotes=$(rclone listremotes)
+    echo -e "\nREMOTES"
+    rclone listremotes
+    echo
+    read -rei "collection" -p "shared directory name: " dir
+    read -rei "$remotes" -p "its remote parent directory: " remote
+    read -rei "$HOME/" -p "its local parent directory: " local
+  }
+  echo -ne "RCLONE MENU
+ 1) Config
+ 2) Local -> Remote
+ 3) Remote -> Local
+  \r"
   o1() {
-    clone-remote() {
-      echo "REMOTES"
-      rclone listremotes
-      remotes=$(rclone listremotes)
-      echo
-      read -rei "collection" -p "shared directory: " dir
-      read -rep "local root: " local
-      read -rei "$remotes" -p "remote root: " remote
-      echo
-      read-args "rclone copy" "$remote$dir $local$dir -vi" confirm
-    }
     if is-user
     then
-      clone-remote
+      read-args "rclone" "config" confirm
     fi
   }
   o2() {
-    sync-to-remote() {
-      echo "REMOTES"
-      rclone listremotes
-      remotes=$(rclone listremotes)
-      echo
-      read -rei "collection" -p "shared directory: " dir
-      read -rep "local root: " local
-      read -rei "$remotes" -p "remote root: " remote
-      echo
-      read-args "rclone sync" "$local$dir $remote$dir -vi" confirm
+    local-remote() {
+      rclone-inputs
+      read -rei "sync" -p "operation: " operation
+      read-args "rclone" "$operation $local$dir $remote$dir -vi" confirm
     }
     if is-user
     then
-      sync-to-remote
+      local-remote
+    fi
+  }
+  o3() {
+    remote-local() {
+      rclone-inputs
+      read -rei "copy" -p "operation: " operation
+      read-args "rclone" "$operation $remote$dir $local$dir -vi" confirm
+    }
+    if is-user
+    then
+      remote-local
     fi
   }
 }
 
 misc-menu() {
-  echo "MISC MENU
+  echo -ne "MISC MENU
  1) Burn iso image
-  "
+  \r"
   o1() {
     burn-iso() {
       burn() {
         wipefs -a /dev/"$burnt"
-        dd bs=4M status=progress if="$iso_path/nixos-*.iso" of=/dev/"$burnt" oflag=sync
+        dd bs=4M status=progress if="$1" of=/dev/"$burnt" oflag=sync
         sync /dev/"$burnt"
       }
+      echo
       lsblk
+      echo
       read -re -p "device: " burnt
-      read -rei "result/iso" -p "path to iso: " iso_path
-      confirm "burn"
+      if [ ! -b /dev/"$burnt" ]
+      then any-key "Not a valid device..." && return 1
+      fi
+      read -rei result/iso/*.iso -p "iso path: " iso_path
+      local found_iso
+      found_iso=$(find -- "$iso_path"/*.iso 2> /dev/null)
+      if [ -e "$iso_path" ]
+      then
+        confirm "burn $iso_path"
+      else
+        if [ -e "$found_iso" ]
+        then confirm "burn $found_iso"
+        else any-key "Not a valid path..." && return 1
+        fi
+      fi
     }
     if is-root
     then

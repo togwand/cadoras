@@ -7,9 +7,6 @@ Shell scripts
 ### cadoras
 A shell command manager
 
-#### TODO
-1. Make certain functions repeat less (e.g. rclone functions)
-
 ### goris
 A Linux distro installer
 
@@ -17,4 +14,5 @@ A Linux distro installer
 * NixOS
 
 #### TODO
-1. Make other distros installations possible
+1. Read from top to bottom and fix issues with syntax and functionality
+2. Make other distros installations possible
