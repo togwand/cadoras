@@ -85,15 +85,6 @@ system-menu() {
 }
 
 dev-menu() {
-  stage-format() {
-    git add -A &> /dev/null
-    treefmt
-  }
-  print-status() {
-    echo -e "\nGIT STATUS"
-    git branch
-    git status -s
-  }
   echo -ne "DEV MENU
  1) Stage, format and local diff
  2) Send changes
@@ -102,10 +93,17 @@ dev-menu() {
  5) Remote diff and pull
  6) Setup new repo
   \r"
+  print-status() {
+    echo -e "\nGIT STATUS"
+    git branch
+    git status -s
+  }
   o1() {
     if is-user
     then
-      run "stage-format"
+      git add -A &> /dev/null
+      print-status
+      run "treefmt"
       git diff --staged
     fi
   }
@@ -113,9 +111,7 @@ dev-menu() {
     send-changes() {
       print-status
       confirm "git commit"
-      print-status
       confirm "git push"
-      run "print-status"
     }
     if is-user
     then
@@ -209,6 +205,11 @@ flake-menu() {
 }
 
 rclone-menu() {
+  echo -ne "RCLONE MENU
+ 1) Config
+ 2) Local -> Remote
+ 3) Remote -> Local
+  \r"
   rclone-inputs() {
     remotes=$(rclone listremotes)
     echo -e "\nREMOTES"
@@ -218,11 +219,6 @@ rclone-menu() {
     read -rei "$remotes" -p "its remote parent directory: " remote
     read -rei "$HOME/" -p "its local parent directory: " local
   }
-  echo -ne "RCLONE MENU
- 1) Config
- 2) Local -> Remote
- 3) Remote -> Local
-  \r"
   o1() {
     if is-user
     then
