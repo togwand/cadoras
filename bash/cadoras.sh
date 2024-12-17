@@ -89,7 +89,7 @@ dev-menu() {
  1) Stage, format and local diff
  2) Send changes
  3) Switch branch
- 4) Merge branch with current
+ 4) Merge current changes to a branch
  5) Remote diff and pull
  6) Setup new repo
   \r"
@@ -154,8 +154,7 @@ dev-menu() {
   o6() {
     setup-new-repo() {
       confirm "git init"
-      read-args "git remote add origin" "https://github.com/togwand/${PWD##*/}" confirm
-      run "print-status"
+      read-args "git remote add origin" "https://github.com/togwand/${PWD##*/}" confirm && run "print-status"
     }
     if is-user
     then
@@ -264,12 +263,12 @@ misc-menu() {
       then any-key "Not a valid device..." && return 1
       fi
       read -rei result/iso/*.iso -p "iso path: " iso_path
-      local found_iso
-      found_iso=$(find -- "$iso_path"/*.iso 2> /dev/null)
       if [ -e "$iso_path" ]
       then
         confirm "burn $iso_path"
       else
+        local found_iso
+        found_iso=$(find -- "$iso_path"/*.iso 2> /dev/null)
         if [ -e "$found_iso" ]
         then confirm "burn $found_iso"
         else any-key "Not a valid path..." && return 1
