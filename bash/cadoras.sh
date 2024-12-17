@@ -42,7 +42,8 @@ switch-user () {
   case $USER in
     root)
       users=$(passwd -Sa|grep P|grep -Eo '^[^ ]+'|grep -v root)
-      echo "USERS
+      echo "
+USERS
 $users
       "
       read -rep "New user: " new_user
