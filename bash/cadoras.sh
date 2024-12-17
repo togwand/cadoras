@@ -73,6 +73,7 @@ system-menu() {
   }
   o3() {
     rebuild-nixos() {
+      echo
       read -rei "switch" -p "mode: " mode
       read -rei "." -p "uri: " flake_uri
       read -rei "$HOSTNAME" -p "name: " name
