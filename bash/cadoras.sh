@@ -306,5 +306,5 @@ KEYBINDS
   "
 }
 
-first-menu "system" "$@"
+first-menu "dev" "$@"
 interface
