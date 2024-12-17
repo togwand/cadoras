@@ -86,7 +86,7 @@ dev-menu() {
       current_branch="$(git branch --show-current)"
       git reset &> /dev/null
       git fetch --all &> /dev/null
-      git diff --staged "origin/$current_branch"
+      confirm "git diff --staged origin/$current_branch" &&
       read-args "git pull" "origin $current_branch --rebase=false" confirm
     }
     if is-user
