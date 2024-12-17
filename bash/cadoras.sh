@@ -2,7 +2,6 @@
 
 if [ -e ./shared.sh ] 2> /dev/null
 then
-  # . ./shared.sh 2> /dev/null
   . ./shared.sh
 fi
 
