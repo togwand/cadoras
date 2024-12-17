@@ -104,14 +104,13 @@ dev-menu() {
       git add -A &> /dev/null
       print-status
       run "treefmt"
-      git diff --staged
+      run "git diff --staged"
     fi
   }
   o2() {
     send-changes() {
       print-status
-      confirm "git commit"
-      confirm "git push"
+      confirm "git commit" && confirm "git push"
     }
     if is-user
     then
