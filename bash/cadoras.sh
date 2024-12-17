@@ -1,62 +1,21 @@
 #!/usr/bin/env bash
 
-if [ -e ./functions.sh ] 2> /dev/null
+if [ -e ./shared.sh ] 2> /dev/null
 then
-  . ./functions.sh 2> /dev/null
+  # . ./shared.sh 2> /dev/null
+  . ./shared.sh
 fi
 
 header() {
   echo "CADORAS
- Press 'h' for help
 
 STATUS
  User: $USER
  Location: $PWD
+
+INFO
+ Press 'h' for help
   "
-}
-
-help() {
-  echo "USAGE
- Use the keybinds below to execute an option
-
-TIPS
- If asked for confirmation, press Enter (all other keys abort execution)
- You can abort some ongoing commands with CTRL+C
-
-KEYBINDS
- h: Read about the program usage in an optional pager screen
- u: Restarts the program with a different user
- q: Quit the program
- s, d, f, r, m: Changes the active menu to the (expanded) letter menu (e.g. m = misc, f = flake)
- digits: Execute the currently displayed menu option by its number (0 equals 10)
-  "
-}
-
-switch-user () {
-  restart() {
-    case $USER in
-      root) exec sudo -u "$new_user" bash "${BASH_SOURCE[0]}" "$menu" ;;
-      *) exec sudo bash "${BASH_SOURCE[0]}" "$menu"
-    esac
-  }
-  case $USER in
-    root)
-      users=$(passwd -Sa|grep P|grep -Eo '^[^ ]+'|grep -v root)
-      echo "
-USERS
-$users
-      "
-      read -rep "New user: " new_user
-      case $new_user in
-        "$users") run restart ;;
-        *) any-key "Not a valid user..." && return 1
-      esac ;;
-    *) run restart ;;
-  esac
-}
-
-quit() {
-  clear && exit
 }
 
 system-menu() {
@@ -88,11 +47,11 @@ system-menu() {
 
 dev-menu() {
   echo -ne "DEV MENU
- 1) Stage, format and local diff
+ 1) Status, stage all, format and local diff
  2) Send changes
- 3) Switch branch
- 4) Merge current changes to a branch
- 5) Remote diff and pull
+ 3) Remote diff and pull
+ 4) Switch branch
+ 5) Merge current changes to a branch
  6) Setup new repo
   \r"
   print-status() {
@@ -103,16 +62,18 @@ dev-menu() {
   o1() {
     if is-user
     then
-      git add -A &> /dev/null
       print-status
-      run "treefmt"
-      run "git diff --staged"
+      git add -A &> /dev/null
+      echo
+      treefmt
+      confirm "git diff --staged"
     fi
   }
   o2() {
     send-changes() {
       print-status
-      confirm "git commit" && confirm "git push"
+      confirm "git commit"
+      confirm "git push"
     }
     if is-user
     then
@@ -120,26 +81,6 @@ dev-menu() {
     fi
   }
   o3() {
-    if is-user
-    then
-      print-status
-      read-args "git switch" "" confirm
-    fi
-  }
-  o4() {
-    merge-current() {
-      local current_branch
-      current_branch="$(git branch --show-current)"
-      print-status
-      read-args "git switch" "" confirm && confirm "git merge $current_branch"
-      git switch "$current_branch" &> /dev/null
-    }
-    if is-user
-    then
-      merge-current
-    fi
-  }
-  o5() {
     diff-pull() {
       local current_branch
       current_branch="$(git branch --show-current)"
@@ -153,10 +94,29 @@ dev-menu() {
       diff-pull
     fi
   }
+  o4() {
+    if is-user
+    then
+      print-status
+      read-args "git switch" "" confirm
+    fi
+  }
+  o5() {
+    merge-current() {
+      local current_branch
+      current_branch="$(git branch --show-current)"
+      print-status
+      read-args "git switch" "" confirm && confirm "git merge $current_branch"
+      git switch "$current_branch" &> /dev/null
+    }
+    if is-user
+    then
+      merge-current
+    fi
+  }
   o6() {
     setup-new-repo() {
-      confirm "git init"
-      read-args "git remote add origin" "https://github.com/togwand/${PWD##*/}" confirm && run "print-status"
+      confirm "git init" && read-args "git remote add origin" "https://github.com/togwand/${PWD##*/}" confirm
     }
     if is-user
     then
@@ -179,6 +139,7 @@ flake-menu() {
   }
   o2() {
     build-output() {
+      echo
       read -rei "." -p "uri: " flake_uri
       read -rei "^*" -p "output: " output
       read-args "nix build" "$flake_uri#$output" confirm
@@ -190,6 +151,7 @@ flake-menu() {
   }
   o3() {
     build-iso() {
+      echo
       read -rei "github:togwand/nixos/experimental" -p "uri: " flake_uri
       read -rei "lanky" -p "name: " name
       read-args "nix build" "$flake_uri#nixosConfigurations.$name.config.system.build.isoImage" confirm
@@ -262,7 +224,7 @@ misc-menu() {
       echo
       read -re -p "device: " burnt
       if [ ! -b /dev/"$burnt" ]
-      then any-key "Not a valid device..." && return 1
+      then any-key "Not a valid device..." ; return 1
       fi
       read -rei result/iso/*.iso -p "iso path: " iso_path
       if [ -e "$iso_path" ]
@@ -273,7 +235,7 @@ misc-menu() {
         found_iso=$(find -- "$iso_path"/*.iso 2> /dev/null)
         if [ -e "$found_iso" ]
         then confirm "burn $found_iso"
-        else any-key "Not a valid path..." && return 1
+        else any-key "Not a valid path..." ; return 1
         fi
       fi
     }
@@ -284,45 +246,7 @@ misc-menu() {
   }
 }
 
-stty -echoctl
-trap " " SIGINT
-
-if [ -n "$1" ]
-then
-  case $1 in
-    system) menu="system" ;;
-    dev) menu="dev" ;;
-    flake) menu="flake" ;;
-    rclone) menu="rclone" ;;
-    misc) menu="misc" ;;
-  esac
-else menu="system"
-fi
-
-while true
-do
-  o1() { return
-  }
-  o2() { return
-  }
-  o3() { return
-  }
-  o4() { return
-  }
-  o5() { return
-  }
-  o6() { return
-  }
-  o7() { return
-  }
-  o8() { return
-  }
-  o9() { return
-  }
-  o10() { return
-  }
-  clear
-  header
+menus() {
   case $menu in
     system) system-menu ;;
     dev) dev-menu ;;
@@ -330,25 +254,57 @@ do
     rclone) rclone-menu ;;
     misc) misc-menu ;;
   esac
-  read -rsn 1 key
-  case $key in
-    h|H) help|less ;;
+}
+
+switch-user () {
+  restart() {
+    case $USER in
+      root) exec sudo -u "$new_user" bash "${BASH_SOURCE[0]}" "$menu" ;;
+      *) exec sudo bash "${BASH_SOURCE[0]}" "$menu"
+    esac
+  }
+  case $USER in
+    root)
+      users=$(passwd -Sa|grep P|grep -Eo '^[^ ]+'|grep -v root)
+      echo "
+USERS
+$users
+      "
+      read -rep "New user: " new_user
+      case $new_user in
+        "$users") run restart ;;
+        *) any-key "Not a valid user..." ; return 1
+      esac ;;
+    *) run restart ;;
+  esac
+}
+
+unique-keys() {
+  case $1 in
     u|U) switch-user ;;
-    q|Q) quit ;;
     s|S) menu="system" ;;
     d|D) menu="dev" ;;
     f|F) menu="flake" ;;
     r|R) menu="rclone" ;;
     m|M) menu="misc" ;;
-    1) o1 ;;
-    2) o2 ;;
-    3) o3 ;;
-    4) o4 ;;
-    5) o5 ;;
-    6) o6 ;;
-    7) o7 ;;
-    8) o8 ;;
-    9) o9 ;;
-    0) o10 ;;
   esac
-done
+}
+
+help() {
+  echo "USAGE
+ Use the keybinds below to execute an option
+
+TIPS
+ If asked for confirmation, press Enter (all other keys abort execution)
+
+KEYBINDS
+ u: Restarts the program with a different user
+ s, d, f, r, m: Changes the active menu to the (expanded) letter menu (e.g. m = misc, f = flake)
+ digits: Execute the currently displayed menu option by its number (0 equals 10)
+ h: Read about the program usage in an optional pager screen
+ q: Quit the program
+  "
+}
+
+first-menu "system" "$@"
+interface
