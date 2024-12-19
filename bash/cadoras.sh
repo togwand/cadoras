@@ -32,7 +32,7 @@ system-menu() {
   o3() {
     rebuild-nixos() {
       echo
-      read -rei "switch" -p "mode: " mode
+      read -rei "test" -p "mode: " mode
       read -rei "." -p "uri: " flake_uri
       read -rei "$HOSTNAME" -p "name: " name
       read-args "nixos-rebuild" "$mode --flake $flake_uri#$name" confirm
