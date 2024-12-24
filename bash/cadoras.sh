@@ -48,10 +48,9 @@ dev-menu() {
   echo -ne "DEV MENU
  1) Status, format, stage all and local diff
  2) Send changes
- 3) Remote diff and pull
- 4) Switch branch
- 5) Merge current changes to a branch
- 6) Setup new repo
+ 3) Switch and merge changes to another branch
+ 4) Remote diff and pull
+ 10) Setup new repo
   \r"
   print-status() {
     echo -e "\nGIT STATUS"
@@ -81,6 +80,18 @@ dev-menu() {
     fi
   }
   o3() {
+    switch-merge() {
+      local current_branch
+      current_branch="$(git branch --show-current)"
+      print-status
+      read-args "git switch" "" confirm && confirm "git merge $current_branch" && git switch "$current_branch" &> /dev/null
+    }
+    if is-user
+    then
+      switch-merge
+    fi
+  }
+  o4() {
     diff-pull() {
       local current_branch
       current_branch="$(git branch --show-current)"
@@ -94,27 +105,7 @@ dev-menu() {
       diff-pull
     fi
   }
-  o4() {
-    if is-user
-    then
-      print-status
-      read-args "git switch" "" confirm
-    fi
-  }
-  o5() {
-    merge-current() {
-      local current_branch
-      current_branch="$(git branch --show-current)"
-      print-status
-      read-args "git switch" "" confirm && confirm "git merge $current_branch"
-      git switch "$current_branch" &> /dev/null
-    }
-    if is-user
-    then
-      merge-current
-    fi
-  }
-  o6() {
+  o10() {
     setup-new-repo() {
       confirm "git init" && read-args "git remote add origin" "https://github.com/togwand/${PWD##*/}" confirm
     }
