@@ -13,8 +13,8 @@ STATUS
 
 INFO
  Press 'h' for help
+ A flake-uri with a disko module is required
  This program doesn't execute after installing (e.g. no passwd)
- For NixOS, a flake-uri (local or remote) with a disko module is required
   "
 }
 

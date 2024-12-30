@@ -8,10 +8,4 @@ Shell scripts
 A shell command manager
 
 ### goris
-A Linux distro installer
-
-#### Available distros
-* NixOS
-
-#### TODO
-1. Make other distros installations possible
+A NixOS installer
