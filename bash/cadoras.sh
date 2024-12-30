@@ -199,51 +199,12 @@ rclone-menu() {
   }
 }
 
-misc-menu() {
-  echo -ne "MISC MENU
- 1) Burn iso image
-  \r"
-  o1() {
-    burn-iso() {
-      burn() {
-        wipefs -af /dev/"$burnt"
-        dd bs=4M status=progress if="$1" of=/dev/"$burnt" oflag=sync
-        sync /dev/"$burnt"
-      }
-      echo
-      lsblk
-      echo
-      read -re -p "device: " burnt
-      if [ ! -b /dev/"$burnt" ]
-      then any-key "Not a valid device..." ; return 1
-      fi
-      read -rei result/iso/*.iso -p "iso path: " iso_path
-      if [ -e "$iso_path" ]
-      then
-        confirm "burn $iso_path"
-      else
-        local found_iso
-        found_iso=$(find -- "$iso_path"/*.iso 2> /dev/null)
-        if [ -e "$found_iso" ]
-        then confirm "burn $found_iso"
-        else any-key "Not a valid path..." ; return 1
-        fi
-      fi
-    }
-    if is-root
-    then
-      burn-iso
-    fi
-  }
-}
-
 menus() {
   case $menu in
     system) system-menu ;;
     dev) dev-menu ;;
     flake) flake-menu ;;
     rclone) rclone-menu ;;
-    misc) misc-menu ;;
   esac
 }
 
@@ -277,7 +238,6 @@ unique-keys() {
     d|D) menu="dev" ;;
     f|F) menu="flake" ;;
     r|R) menu="rclone" ;;
-    m|M) menu="misc" ;;
   esac
 }
 
@@ -290,7 +250,7 @@ TIPS
 
 KEYBINDS
  u: Restarts the program with a different user
- s, d, f, r, m: Changes the active menu to the (expanded) letter menu (e.g. m = misc, f = flake)
+ s, d, f, r: Changes the active menu to the (expanded) letter menu (e.g. d = dev, r = rclone)
  digits: Execute the currently displayed menu option by its number (0 equals 10)
  h: Read about the program usage in an optional pager screen
  q: Quit the program
