@@ -206,7 +206,7 @@ misc-menu() {
   o1() {
     burn-iso() {
       burn() {
-        wipefs -a /dev/"$burnt"
+        wipefs -af /dev/"$burnt"
         dd bs=4M status=progress if="$1" of=/dev/"$burnt" oflag=sync
         sync /dev/"$burnt"
       }
