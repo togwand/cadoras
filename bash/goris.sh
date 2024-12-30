@@ -27,7 +27,7 @@ nixos-menu() {
     read -rei "stale" -p "config name: " config_name
     read-args "disko" "-m disko -f $flake_uri#$config_name" confirm &&
     read-args "nixos-install" "--root /mnt --flake $flake_uri#$config_name --no-root-password " confirm &&
-    echo "Finished! You can reboot now. Remember to set a password with nixos-enter and passwd"
+    any-key "Finished! You can reboot now. Remember to sudo nixos-enter and passwd"
   }
   o1() {
     echo
